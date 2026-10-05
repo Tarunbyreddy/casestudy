@@ -27,32 +27,32 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-inner">
         <Link to="/" className="brand">
-          <ShoppingBag size={25} />
+          <ShoppingBag size={20} />
           <span>ShopSphere</span>
         </Link>
 
         <div className="nav-links">
           {authenticated && (
             <Link to="/dashboard" className="nav-link">
-              <LayoutDashboard size={18} />
+              <LayoutDashboard size={20} />
               Dashboard
             </Link>
           )}
 
           <Link to="/products" className="nav-link">
-            <Package size={18} />
+            <Package size={20} />
             Products
           </Link>
 
-          {authenticated && (
+          {user?.roleName !== "ADMIN" && (
             <Link to="/orders" className="nav-link">
-              <ShoppingBag size={18} />
+              <ShoppingBag size={20} />
               Orders
             </Link>
           )}
-          {authenticated && (
+          {user?.roleName !== "ADMIN" && (
             <Link to="/favourites" className="nav-link">
-              <Heart size={18} />
+              <Heart size={20} />
               Favourites
             </Link>
           )}
@@ -69,14 +69,14 @@ function Navbar() {
 
           {user?.roleName === "TENANT" && (
             <Link to="/my-store" className="nav-link">
-              <Store size={18} />
+              <Store size={20} />
               My Store
             </Link>
           )}
 
           {user?.roleName === "ADMIN" && (
             <Link to="/admin" className="nav-link">
-              <ShieldCheck size={18} />
+              <ShieldCheck size={20} />
               Admin
             </Link>
           )}

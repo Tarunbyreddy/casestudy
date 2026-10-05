@@ -17,9 +17,9 @@ function AdminPage() {
   const [userForm, setUserForm] = useState({
     username: "",
     email: "",
+    password: "",
     roleId: "",
     tenantId: "",
-    keycloakUserId: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -52,20 +52,7 @@ function AdminPage() {
       setUsers(userResponse);
       setCategories(categoryResponse.data);
 
-      /*
-       * Roles are loaded separately because the backend
-       * currently exposes roles through the RoleRepository/
-       * service only if a role endpoint exists.
-       *
-       * For now we use the roles already defined in Keycloak
-       * and your database:
-       *
-       * ADMIN = 1
-       * TENANT = 2
-       * USER = 3
-       *
-       * We will make this dynamic if you have a /roles endpoint.
-       */
+      // Keep all three roles.
       setRoles([
         { id: 1, name: "ADMIN" },
         { id: 2, name: "TENANT" },
@@ -104,7 +91,9 @@ function AdminPage() {
       setTenantName("");
       setTenantDomain("");
 
-      setMessage("Tenant created successfully.");
+      setMessage(
+        "Tenant created successfully in the application and Keycloak.",
+      );
 
       await loadAdminData();
     } catch (err) {
@@ -227,9 +216,17 @@ function AdminPage() {
     if (
       !userForm.username.trim() ||
       !userForm.email.trim() ||
+      !userForm.password ||
       !userForm.roleId
     ) {
-      setError("Username, email and role are required.");
+      setError("Username, email, password and role are required.");
+      return;
+    }
+
+    // Password is required because the backend
+    // will create this user in Keycloak.
+    if (userForm.password.length < 6) {
+      setError("Password must contain at least 6 characters.");
       return;
     }
 
@@ -251,12 +248,25 @@ function AdminPage() {
       setError("");
       setMessage("");
 
+      /*
+       * IMPORTANT:
+       *
+       * We do NOT send keycloakUserId anymore.
+       *
+       * Spring Boot will:
+       *
+       * 1. Create the user in Keycloak
+       * 2. Get the generated Keycloak user ID
+       * 3. Assign the selected role
+       * 4. Add the user to the selected tenant group
+       * 5. Save the MySQL user with that Keycloak ID
+       */
       const userData = {
         username: userForm.username.trim(),
         email: userForm.email.trim(),
+        password: userForm.password,
         roleId: Number(userForm.roleId),
         tenantId: userForm.tenantId ? Number(userForm.tenantId) : null,
-        keycloakUserId: userForm.keycloakUserId.trim() || null,
       };
 
       await createUser(userData);
@@ -264,12 +274,12 @@ function AdminPage() {
       setUserForm({
         username: "",
         email: "",
+        password: "",
         roleId: "",
         tenantId: "",
-        keycloakUserId: "",
       });
 
-      setMessage("User created successfully.");
+      setMessage("User created successfully in MySQL and Keycloak.");
 
       await loadAdminData();
     } catch (err) {
@@ -376,6 +386,7 @@ function AdminPage() {
               value={tenantName}
               onChange={(e) => setTenantName(e.target.value)}
               className="border rounded-lg px-4 py-2"
+              required
             />
 
             <input
@@ -384,6 +395,7 @@ function AdminPage() {
               value={tenantDomain}
               onChange={(e) => setTenantDomain(e.target.value)}
               className="border rounded-lg px-4 py-2"
+              required
             />
 
             <button
@@ -410,11 +422,8 @@ function AdminPage() {
                 <thead>
                   <tr className="border-b text-left">
                     <th className="p-3">ID</th>
-
                     <th className="p-3">Name</th>
-
                     <th className="p-3">Domain</th>
-
                     <th className="p-3">Action</th>
                   </tr>
                 </thead>
@@ -491,6 +500,30 @@ function AdminPage() {
               />
             </div>
 
+            {/* PASSWORD */}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={userForm.password}
+                onChange={handleUserChange}
+                className="border rounded-lg px-4 py-2 w-full"
+                minLength={6}
+                required
+              />
+
+              <p className="text-xs text-gray-500 mt-1">
+                Minimum 6 characters. Password is stored securely by Keycloak,
+                not MySQL.
+              </p>
+            </div>
+
             {/* ROLE */}
 
             <div>
@@ -536,27 +569,9 @@ function AdminPage() {
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* KEYCLOAK USER ID */}
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Keycloak User ID
-              </label>
-
-              <input
-                type="text"
-                name="keycloakUserId"
-                placeholder="Optional Keycloak user ID"
-                value={userForm.keycloakUserId}
-                onChange={handleUserChange}
-                className="border rounded-lg px-4 py-2 w-full"
-              />
 
               <p className="text-xs text-gray-500 mt-1">
-                Use the Keycloak user's ID so the application user is linked to
-                Keycloak.
+                Required when the selected role is TENANT.
               </p>
             </div>
 
@@ -593,6 +608,7 @@ function AdminPage() {
               value={categoryName}
               onChange={(e) => setCategoryName(e.target.value)}
               className="border rounded-lg px-4 py-2 flex-1"
+              required
             />
 
             <button
@@ -637,15 +653,10 @@ function AdminPage() {
                 <thead>
                   <tr className="border-b text-left">
                     <th className="p-3">ID</th>
-
                     <th className="p-3">Username</th>
-
                     <th className="p-3">Email</th>
-
                     <th className="p-3">Role</th>
-
                     <th className="p-3">Tenant</th>
-
                     <th className="p-3">Action</th>
                   </tr>
                 </thead>

@@ -43,8 +43,10 @@ function ProductsPage() {
 
   const [favouriteError, setFavouriteError] = useState("");
 
-  // LOAD TENANTS + CATEGORIES
+  // ADMIN USERS SHOULD NOT USE FAVOURITES
+  const isAdmin = user?.roleName === "ADMIN";
 
+  // LOAD TENANTS + CATEGORIES
   useEffect(() => {
     async function loadFilters() {
       try {
@@ -64,7 +66,6 @@ function ProductsPage() {
   }, []);
 
   // LOAD PRODUCTS
-
   useEffect(() => {
     async function loadProducts() {
       try {
@@ -94,10 +95,10 @@ function ProductsPage() {
   }, [search, categoryId, tenantId, page]);
 
   // LOAD USER FAVOURITES
-
   useEffect(() => {
     async function loadFavourites() {
-      if (!authenticated) {
+      // ADMIN DOES NOT HAVE ACCESS TO FAVOURITES
+      if (!authenticated || isAdmin) {
         setFavouriteIds(new Set());
         return;
       }
@@ -130,10 +131,9 @@ function ProductsPage() {
     }
 
     loadFavourites();
-  }, [authenticated]);
+  }, [authenticated, isAdmin]);
 
   // FILTER CHANGE
-
   const handleSearch = (event) => {
     setSearch(event.target.value);
     setPage(0);
@@ -150,8 +150,12 @@ function ProductsPage() {
   };
 
   // TOGGLE FAVOURITE
-
   const toggleFavourite = async (productId) => {
+    // ADMIN SHOULD NEVER USE FAVOURITES
+    if (isAdmin) {
+      return;
+    }
+
     if (!authenticated) {
       setFavouriteError("Please login to add products to favourites.");
       return;
@@ -199,11 +203,9 @@ function ProductsPage() {
   };
 
   // RENDER
-
   return (
     <div className="page-container">
       {/* PAGE HEADER */}
-
       <div className="page-header">
         <div>
           <h1>Products</h1>
@@ -213,7 +215,6 @@ function ProductsPage() {
       </div>
 
       {/* FILTERS */}
-
       <div className="product-filters">
         <div className="search-box">
           <Search size={20} />
@@ -248,7 +249,6 @@ function ProductsPage() {
       </div>
 
       {/* USER INFORMATION */}
-
       {user && (
         <div className="catalog-user-info">
           Welcome, <strong>{user.username}</strong>
@@ -256,25 +256,22 @@ function ProductsPage() {
       )}
 
       {/* FAVOURITE ERROR */}
-
-      {favouriteError && <div className="error-message">{favouriteError}</div>}
+      {favouriteError && !isAdmin && (
+        <div className="error-message">{favouriteError}</div>
+      )}
 
       {/* LOADING */}
-
       {loading && <div className="loading">Loading products...</div>}
 
       {/* PRODUCT ERROR */}
-
       {error && <div className="error-message">{error}</div>}
 
       {/* EMPTY RESULT */}
-
       {!loading && products.length === 0 && (
         <div className="empty-state">No products found.</div>
       )}
 
       {/* PRODUCTS */}
-
       <div className="product-grid">
         {products.map((product) => {
           const isFavourite = favouriteIds.has(product.id);
@@ -284,36 +281,39 @@ function ProductsPage() {
           return (
             <div className="product-card" key={product.id}>
               {/* PRODUCT TOP */}
-
               <div className="product-card-top">
                 <span className="product-brand">{product.tenantName}</span>
 
-                <button
-                  type="button"
-                  className={`icon-button ${
-                    isFavourite ? "favourite-active" : ""
-                  }`}
-                  onClick={() => toggleFavourite(product.id)}
-                  disabled={isFavouriteLoading}
-                  title={
-                    isFavourite ? "Remove from favourites" : "Add to favourites"
-                  }
-                >
-                  <Heart
-                    size={18}
-                    fill={isFavourite ? "currentColor" : "none"}
-                  />
-                </button>
+                {/* FAVOURITE BUTTON
+                    Hidden for ADMIN */}
+                {!isAdmin && (
+                  <button
+                    type="button"
+                    className={`icon-button ${
+                      isFavourite ? "favourite-active" : ""
+                    }`}
+                    onClick={() => toggleFavourite(product.id)}
+                    disabled={isFavouriteLoading}
+                    title={
+                      isFavourite
+                        ? "Remove from favourites"
+                        : "Add to favourites"
+                    }
+                  >
+                    <Heart
+                      size={18}
+                      fill={isFavourite ? "currentColor" : "none"}
+                    />
+                  </button>
+                )}
               </div>
 
               {/* PRODUCT IMAGE */}
-
               <div className="product-image-placeholder">
                 {product.name?.charAt(0)?.toUpperCase()}
               </div>
 
               {/* PRODUCT DETAILS */}
-
               <div className="product-card-body">
                 <p className="product-category">{product.categoryName}</p>
 
@@ -330,7 +330,6 @@ function ProductsPage() {
                 </div>
 
                 {/* ADD TO CART */}
-
                 <button
                   className="primary-button"
                   disabled={product.quantity <= 0}
@@ -347,7 +346,6 @@ function ProductsPage() {
       </div>
 
       {/* PAGINATION */}
-
       {totalPages > 1 && (
         <div className="pagination">
           <button
