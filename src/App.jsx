@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import ProductsPage from "./pages/ProductsPage";
@@ -19,7 +19,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<LoginPage />} />
-
+        <Route path="/signup" element={<SignupPage />} />
         <Route
           path="/dashboard"
           element={

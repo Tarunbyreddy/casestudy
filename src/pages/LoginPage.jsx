@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ShoppingBag, LogIn } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
@@ -42,6 +42,11 @@ function LoginPage() {
           <LogIn size={18} />
           &nbsp; Login with Keycloak
         </button>
+      </div>
+      <div className="auth-footer">
+        <p>
+          Don't have an account? <Link to="/signup">Sign Up</Link>
+        </p>
       </div>
     </div>
   );
