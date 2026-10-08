@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../services/api";
 
 import { getUsers, createUser, deleteUser } from "../services/userService";
@@ -6,11 +7,12 @@ import { getUsers, createUser, deleteUser } from "../services/userService";
 function AdminPage() {
   const [tenants, setTenants] = useState([]);
   const [users, setUsers] = useState([]);
+  const [usersPage, setUsersPage] = useState(0);
   const [categories, setCategories] = useState([]);
   const [roles, setRoles] = useState([]);
 
   const [tenantName, setTenantName] = useState("");
-  const [tenantDomain, setTenantDomain] = useState("");
+  //const [tenantDomain, setTenantDomain] = useState("");
 
   const [categoryName, setCategoryName] = useState("");
 
@@ -28,9 +30,18 @@ function AdminPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // --------------------------------------------------
+  const usersPerPage = 10;
+  const totalUsersPages = Math.ceil(users.length / usersPerPage);
+  const currentUsersPage = Math.min(
+    usersPage,
+    Math.max(totalUsersPages - 1, 0),
+  );
+  const visibleUsers = users.slice(
+    currentUsersPage * usersPerPage,
+    (currentUsersPage + 1) * usersPerPage,
+  );
+
   // LOAD ADMIN DATA
-  // --------------------------------------------------
 
   useEffect(() => {
     loadAdminData();
@@ -66,16 +77,14 @@ function AdminPage() {
       setLoading(false);
     }
   };
-
-  // --------------------------------------------------
   // CREATE TENANT
-  // --------------------------------------------------
 
   const handleCreateTenant = async (event) => {
     event.preventDefault();
 
-    if (!tenantName.trim() || !tenantDomain.trim()) {
-      setError("Tenant name and domain are required.");
+    if (!tenantName.trim()) {
+      //|| !tenantDomain.trim()
+      setError("Tenant name is required."); //and domain are
       return;
     }
 
@@ -85,15 +94,12 @@ function AdminPage() {
 
       await api.post("/tenants", {
         name: tenantName.trim(),
-        domain: tenantDomain.trim(),
-      });
+      }); //
 
       setTenantName("");
-      setTenantDomain("");
+      //setTenantDomain("");
 
-      setMessage(
-        "Tenant created successfully in the application and Keycloak.",
-      );
+      setMessage("Tenant created successfully in the application.");
 
       await loadAdminData();
     } catch (err) {
@@ -103,9 +109,7 @@ function AdminPage() {
     }
   };
 
-  // --------------------------------------------------
   // DELETE TENANT
-  // --------------------------------------------------
 
   const handleDeleteTenant = async (id) => {
     const confirmed = window.confirm(
@@ -132,9 +136,7 @@ function AdminPage() {
     }
   };
 
-  // --------------------------------------------------
   // CREATE CATEGORY
-  // --------------------------------------------------
 
   const handleCreateCategory = async (event) => {
     event.preventDefault();
@@ -164,9 +166,7 @@ function AdminPage() {
     }
   };
 
-  // --------------------------------------------------
   // DELETE CATEGORY
-  // --------------------------------------------------
 
   const handleDeleteCategory = async (id) => {
     const confirmed = window.confirm(
@@ -193,9 +193,7 @@ function AdminPage() {
     }
   };
 
-  // --------------------------------------------------
   // USER FORM CHANGE
-  // --------------------------------------------------
 
   const handleUserChange = (event) => {
     const { name, value } = event.target;
@@ -206,9 +204,7 @@ function AdminPage() {
     }));
   };
 
-  // --------------------------------------------------
   // CREATE USER
-  // --------------------------------------------------
 
   const handleCreateUser = async (event) => {
     event.preventDefault();
@@ -248,19 +244,6 @@ function AdminPage() {
       setError("");
       setMessage("");
 
-      /*
-       * IMPORTANT:
-       *
-       * We do NOT send keycloakUserId anymore.
-       *
-       * Spring Boot will:
-       *
-       * 1. Create the user in Keycloak
-       * 2. Get the generated Keycloak user ID
-       * 3. Assign the selected role
-       * 4. Add the user to the selected tenant group
-       * 5. Save the MySQL user with that Keycloak ID
-       */
       const userData = {
         username: userForm.username.trim(),
         email: userForm.email.trim(),
@@ -291,9 +274,7 @@ function AdminPage() {
     }
   };
 
-  // --------------------------------------------------
   // DELETE USER
-  // --------------------------------------------------
 
   const handleDeleteUser = async (id) => {
     const confirmed = window.confirm(
@@ -336,9 +317,7 @@ function AdminPage() {
     );
   }
 
-  // --------------------------------------------------
   // RENDER
-  // --------------------------------------------------
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -389,14 +368,14 @@ function AdminPage() {
               required
             />
 
-            <input
+            {/* <input
               type="text"
               placeholder="Tenant domain"
               value={tenantDomain}
               onChange={(e) => setTenantDomain(e.target.value)}
               className="border rounded-lg px-4 py-2"
               required
-            />
+            /> */}
 
             <button
               type="submit"
@@ -407,9 +386,7 @@ function AdminPage() {
           </form>
         </div>
 
-        {/* ================================================== */}
         {/* TENANTS */}
-        {/* ================================================== */}
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Tenants</h2>
@@ -423,7 +400,7 @@ function AdminPage() {
                   <tr className="border-b text-left">
                     <th className="p-3">ID</th>
                     <th className="p-3">Name</th>
-                    <th className="p-3">Domain</th>
+                    {/* <th className="p-3">Domain</th> */}
                     <th className="p-3">Action</th>
                   </tr>
                 </thead>
@@ -435,7 +412,7 @@ function AdminPage() {
 
                       <td className="p-3 font-medium">{tenant.name}</td>
 
-                      <td className="p-3">{tenant.domain}</td>
+                      {/* <td className="p-3">{tenant.domain}</td> */}
 
                       <td className="p-3">
                         <button
@@ -662,7 +639,7 @@ function AdminPage() {
                 </thead>
 
                 <tbody>
-                  {users.map((user) => (
+                  {visibleUsers.map((user) => (
                     <tr key={user.id} className="border-b">
                       <td className="p-3">{user.id}</td>
 
@@ -686,6 +663,32 @@ function AdminPage() {
                   ))}
                 </tbody>
               </table>
+
+              {totalUsersPages > 1 && (
+                <div className="pagination">
+                  <button
+                    type="button"
+                    aria-label="Previous users page"
+                    disabled={currentUsersPage === 0}
+                    onClick={() => setUsersPage(currentUsersPage - 1)}
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+
+                  <span>
+                    Page {currentUsersPage + 1} of {totalUsersPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    aria-label="Next users page"
+                    disabled={currentUsersPage >= totalUsersPages - 1}
+                    onClick={() => setUsersPage(currentUsersPage + 1)}
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

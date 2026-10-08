@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, RotateCcw } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 import {
@@ -7,6 +7,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  activateProduct,
 } from "../services/productService";
 import { getCategories } from "../services/categoryService";
 
@@ -33,6 +34,7 @@ function MyStorePage() {
 
   const tenantName = user?.tenantName;
 
+  // Load products and categories
   const loadData = async () => {
     if (!tenantName) return;
 
@@ -52,6 +54,7 @@ function MyStorePage() {
       setCategories(categoryData);
     } catch (err) {
       console.error(err);
+
       setError(err.response?.data?.message || "Failed to load store data.");
     } finally {
       setLoading(false);
@@ -62,6 +65,7 @@ function MyStorePage() {
     loadData();
   }, [tenantName]);
 
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -71,6 +75,7 @@ function MyStorePage() {
     }));
   };
 
+  // Open create product form
   const openCreateForm = () => {
     setEditingProduct(null);
 
@@ -86,6 +91,7 @@ function MyStorePage() {
     setError("");
   };
 
+  // Open edit product form
   const openEditForm = (product) => {
     setEditingProduct(product);
 
@@ -101,11 +107,13 @@ function MyStorePage() {
     setError("");
   };
 
+  // Close product form
   const closeForm = () => {
     setShowForm(false);
     setEditingProduct(null);
   };
 
+  // Create / update product
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -138,9 +146,10 @@ function MyStorePage() {
     }
   };
 
+  // Soft delete product
   const handleDelete = async (productId) => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this product?",
+      "Are you sure you want to deactivate this product?",
     );
 
     if (!confirmed) return;
@@ -154,15 +163,38 @@ function MyStorePage() {
     } catch (err) {
       console.error(err);
 
-      setError(err.response?.data?.message || "Unable to delete product.");
+      setError(err.response?.data?.message || "Unable to deactivate product.");
     }
   };
 
+  // Reactivate product
+  const handleActivate = async (productId) => {
+    const confirmed = window.confirm(
+      "Do you want to activate this product again?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      await activateProduct(tenantName, productId);
+
+      await loadData();
+    } catch (err) {
+      console.error(err);
+
+      setError(err.response?.data?.message || "Unable to activate product.");
+    }
+  };
+
+  // No tenant assigned
   if (!tenantName) {
     return (
       <div className="page">
         <div className="empty-state">
           <h2>No tenant assigned</h2>
+
           <p>Your account is not associated with a store.</p>
         </div>
       </div>
@@ -171,6 +203,7 @@ function MyStorePage() {
 
   return (
     <div className="page">
+      {/* Page Header */}
       <div className="page-header">
         <div>
           <h1 className="page-title">{tenantName} Store</h1>
@@ -186,20 +219,23 @@ function MyStorePage() {
         </button>
       </div>
 
+      {/* Error Message */}
       {error && <div className="error-message">{error}</div>}
 
+      {/* Product Form */}
       {showForm && (
         <div className="form-card">
           <div className="form-header">
             <h2>{editingProduct ? "Update Product" : "Add Product"}</h2>
 
-            <button className="icon-btn" onClick={closeForm}>
+            <button className="icon-btn" onClick={closeForm} type="button">
               <X size={18} />
             </button>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
+              {/* Product Name */}
               <div className="form-group">
                 <label>Product Name</label>
 
@@ -211,6 +247,7 @@ function MyStorePage() {
                 />
               </div>
 
+              {/* Price */}
               <div className="form-group">
                 <label>Price</label>
 
@@ -225,6 +262,7 @@ function MyStorePage() {
                 />
               </div>
 
+              {/* Quantity */}
               <div className="form-group">
                 <label>Quantity</label>
 
@@ -238,6 +276,7 @@ function MyStorePage() {
                 />
               </div>
 
+              {/* Category */}
               <div className="form-group">
                 <label>Category</label>
 
@@ -258,6 +297,7 @@ function MyStorePage() {
               </div>
             </div>
 
+            {/* Description */}
             <div className="form-group">
               <label>Description</label>
 
@@ -269,6 +309,7 @@ function MyStorePage() {
               />
             </div>
 
+            {/* Form Actions */}
             <div className="form-actions">
               <button
                 type="button"
@@ -290,6 +331,7 @@ function MyStorePage() {
         </div>
       )}
 
+      {/* Products */}
       {loading ? (
         <div className="empty-state">
           <p>Loading products...</p>
@@ -297,29 +339,50 @@ function MyStorePage() {
       ) : products.length === 0 ? (
         <div className="empty-state">
           <h2>No products yet</h2>
+
           <p>Add your first product to this store.</p>
         </div>
       ) : (
         <div className="product-grid">
           {products.map((product) => (
-            <div className="product-card" key={product.id}>
+            <div
+              className={`product-card ${
+                product.active === false ? "inactive-product" : ""
+              }`}
+              key={product.id}
+            >
               <div className="product-card-body">
+                {/* Category */}
                 <span className="product-category">{product.categoryName}</span>
 
+                {/* Product Name */}
                 <h3>{product.name}</h3>
 
+                {/* Description */}
                 <p className="product-description">
                   {product.description || "No description available."}
                 </p>
 
+                {/* Price and Stock */}
                 <div className="product-meta">
                   <strong>₹{Number(product.price).toFixed(2)}</strong>
 
                   <span className="stock">Stock: {product.quantity}</span>
                 </div>
+
+                {/* Active / Inactive Status */}
+                <div
+                  className={`product-status ${
+                    product.active === false ? "inactive" : "active"
+                  }`}
+                >
+                  {product.active === false ? "Inactive" : "Active"}
+                </div>
               </div>
 
+              {/* Product Actions */}
               <div className="product-actions">
+                {/* Edit */}
                 <button
                   className="secondary-btn"
                   onClick={() => openEditForm(product)}
@@ -328,13 +391,25 @@ function MyStorePage() {
                   Edit
                 </button>
 
-                <button
-                  className="danger-btn"
-                  onClick={() => handleDelete(product.id)}
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
+                {/* Active Product → Deactivate */}
+                {product.active !== false ? (
+                  <button
+                    className="danger-btn"
+                    onClick={() => handleDelete(product.id)}
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                ) : (
+                  /* Inactive Product → Activate */
+                  <button
+                    className="primary-btn"
+                    onClick={() => handleActivate(product.id)}
+                  >
+                    <RotateCcw size={16} />
+                    Activate
+                  </button>
+                )}
               </div>
             </div>
           ))}

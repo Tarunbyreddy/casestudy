@@ -7,7 +7,6 @@ export async function getProducts({
   page = 0,
   size = 8,
 }) {
-
   const params = {
     page,
     size,
@@ -36,28 +35,17 @@ export async function getProducts({
 export async function getTenantProducts(
   tenantName,
   {
-    search = "",
-    categoryId = "",
     page = 0,
-    size = 8,
+    size = 50,
   } = {}
 ) {
-
   const params = {
     page,
     size,
   };
 
-  if (search.trim()) {
-    params.search = search;
-  }
-
-  if (categoryId) {
-    params.categoryId = categoryId;
-  }
-
   const response = await api.get(
-    `/${tenantName}/products`,
+    `/${tenantName}/my-products`,
     {
       params,
     }
@@ -71,7 +59,6 @@ export async function createProduct(
   tenantName,
   product
 ) {
-
   const response = await api.post(
     `/${tenantName}/products`,
     product
@@ -86,7 +73,6 @@ export async function updateProduct(
   productId,
   product
 ) {
-
   const response = await api.put(
     `/${tenantName}/products/${productId}`,
     product
@@ -96,11 +82,22 @@ export async function updateProduct(
 }
 
 
+export const activateProduct = async (
+  tenantName,
+  productId
+) => {
+  const response = await api.put(
+    `/${tenantName}/products/${productId}/activate`
+  );
+
+  return response.data;
+};
+
+
 export async function deleteProduct(
   tenantName,
   productId
 ) {
-
   await api.delete(
     `/${tenantName}/products/${productId}`
   );

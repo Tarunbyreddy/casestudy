@@ -289,6 +289,12 @@ select {
   background: #374151;
 }
 
+.product-card .primary-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
 /* =========================
    SIGN UP
 ========================= */
@@ -723,6 +729,8 @@ select {
 .order-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 
   background: #f9fafb;
 
@@ -731,6 +739,39 @@ select {
   border-radius: 8px;
 
   margin-bottom: 8px;
+}
+
+.order-items-empty {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.cart-toast {
+  position: fixed;
+  top: 86px;
+  right: 24px;
+  z-index: 110;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 13px 17px;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.14);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 500px) {
+  .cart-toast {
+    top: 82px;
+    right: 16px;
+  }
+
+  .order-item {
+    align-items: flex-start;
+  }
 }
 
 /* =========================

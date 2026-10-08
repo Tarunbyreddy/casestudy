@@ -55,33 +55,66 @@ function OrdersPage() {
           <p>Your orders will appear here after checkout.</p>
         </div>
       ) : (
-        orders.map((order) => (
-          <div className="order-card" key={order.id}>
-            <div className="order-header">
-              <div>
-                <strong>Order #{order.id}</strong>
+        orders.map((order) => {
+          const orderItems =
+            [order.orderItems, order.items].find(Array.isArray) || [];
 
-                <div className="stock">{order.totalQuantity} items</div>
-              </div>
-
-              <strong>₹{Number(order.totalAmount).toFixed(2)}</strong>
-            </div>
-
-            {order.orderItems?.map((item) => (
-              <div className="order-item" key={item.id}>
+          return (
+            <div className="order-card" key={order.id}>
+              <div className="order-header">
                 <div>
-                  <strong>
-                    {item.productName || item.product?.name || "Product"}
-                  </strong>
+                  <strong>Order #{order.id}</strong>
 
-                  <div className="stock">Quantity: {item.quantity}</div>
+                  <div className="stock">
+                    {order.totalQuantity ??
+                      orderItems.reduce(
+                        (total, item) => total + Number(item.quantity || 0),
+                        0,
+                      )}{" "}
+                    items
+                  </div>
                 </div>
 
-                <strong>₹{Number(item.priceAtPurchase).toFixed(2)}</strong>
+                <strong>₹{Number(order.totalAmount).toFixed(2)}</strong>
               </div>
-            ))}
-          </div>
-        ))
+
+              {orderItems.length > 0 ? (
+                orderItems.map((item, index) => {
+                  const price = Number(
+                    item.priceAtPurchase ??
+                      item.price ??
+                      item.product?.price ??
+                      0,
+                  );
+
+                  return (
+                    <div
+                      className="order-item"
+                      key={item.id ?? item.productId ?? `${order.id}-${index}`}
+                    >
+                      <div>
+                        <strong>
+                          {item.productName ||
+                            item.product?.name ||
+                            item.name ||
+                            "Product"}
+                        </strong>
+
+                        <div className="stock">Quantity: {item.quantity}</div>
+                      </div>
+
+                      <strong>₹{price.toFixed(2)} each</strong>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="order-items-empty">
+                  Item details are not available for this order.
+                </p>
+              )}
+            </div>
+          );
+        })
       )}
     </div>
   );

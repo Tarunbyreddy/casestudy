@@ -331,13 +331,19 @@ function ProductsPage() {
 
                 {/* ADD TO CART */}
                 <button
-                  className="primary-button"
-                  disabled={product.quantity <= 0}
+                  className={`primary-button ${
+                    isAdmin ? "admin-cart-disabled" : ""
+                  }`}
+                  disabled={isAdmin || product.quantity <= 0}
                   onClick={() => addToCart(product)}
                 >
                   <ShoppingCart size={18} />
 
-                  {product.quantity > 0 ? "Add to Cart" : "Out of Stock"}
+                  {isAdmin
+                    ? "Unavailable to Admin"
+                    : product.quantity > 0
+                      ? "Add to Cart"
+                      : "Out of Stock"}
                 </button>
               </div>
             </div>

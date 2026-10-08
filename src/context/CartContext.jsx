@@ -8,12 +8,22 @@ export function CartProvider({ children }) {
 
     return saved ? JSON.parse(saved) : [];
   });
+  const [cartMessage, setCartMessage] = useState("");
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
+  useEffect(() => {
+    if (!cartMessage) return undefined;
+
+    const timeout = setTimeout(() => setCartMessage(""), 2500);
+    return () => clearTimeout(timeout);
+  }, [cartMessage]);
+
   const addToCart = (product) => {
+    setCartMessage(`${product.name} added to cart.`);
+
     setCartItems((current) => {
       const existing = current.find((item) => item.id === product.id);
 
@@ -87,6 +97,11 @@ export function CartProvider({ children }) {
       }}
     >
       {children}
+      {cartMessage && (
+        <div className="cart-toast" role="status" aria-live="polite">
+          {cartMessage}
+        </div>
+      )}
     </CartContext.Provider>
   );
 }
